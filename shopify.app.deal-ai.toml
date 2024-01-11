@@ -2,7 +2,7 @@
 
 name = "deal-ai"
 client_id = "bc90959d38caf086c5dabfe21dc483c5"
-application_url = "https://appear-remove-reading-center.trycloudflare.com"
+application_url = "https://resolution-debate-collected-glasses.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://appear-remove-reading-center.trycloudflare.com/auth/callback",
-  "https://appear-remove-reading-center.trycloudflare.com/auth/shopify/callback",
-  "https://appear-remove-reading-center.trycloudflare.com/api/auth/callback"
+  "https://resolution-debate-collected-glasses.trycloudflare.com/auth/callback",
+  "https://resolution-debate-collected-glasses.trycloudflare.com/auth/shopify/callback",
+  "https://resolution-debate-collected-glasses.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

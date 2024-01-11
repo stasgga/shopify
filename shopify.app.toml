@@ -1,23 +1,23 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 name = "deal-ai"
-client_id = "52c88f789e52c89b2061877c6eab2057"
-application_url = "https://reproduced-veterinary-plastics-revised.trycloudflare.com"
+client_id = "d6f1f127c09bd28af9939ff2073e6e34"
+application_url = "https://hood-comparisons-successfully-enemy.trycloudflare.com"
 embedded = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products"
+scopes = ""
 
 [auth]
 redirect_urls = [
-  "https://reproduced-veterinary-plastics-revised.trycloudflare.com/auth/callback",
-  "https://reproduced-veterinary-plastics-revised.trycloudflare.com/auth/shopify/callback",
-  "https://reproduced-veterinary-plastics-revised.trycloudflare.com/api/auth/callback"
+  "https://hood-comparisons-successfully-enemy.trycloudflare.com/auth/callback",
+  "https://hood-comparisons-successfully-enemy.trycloudflare.com/auth/shopify/callback",
+  "https://hood-comparisons-successfully-enemy.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
-api_version = "2023-10"
+api_version = "2024-01"
 
 [pos]
 embedded = false

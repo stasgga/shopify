@@ -1,6 +1,5 @@
 import { ActionFunction } from '@remix-run/node';
-import { authenticate, updateProductOnShopify } from '~/shopify.server';
-
+import { authenticate } from '~/shopify.server';
 
 export const action: ActionFunction = async ({ request }) => {
     const { topic, payload } = await authenticate.webhook(request);
@@ -8,114 +7,46 @@ export const action: ActionFunction = async ({ request }) => {
     if (topic === 'PRODUCTS_CREATE') {
         // Extract details from the payload
         const productId = payload.id;
-        const bodyHtml = payload.body_html;
-        const shop = payload.admin_graphql_api_id;
-
+        const newDescription = "Hi I am Ali :)";
         console.log(productId);
-        console.log(bodyHtml);
-        console.log(shop);
+        console.log(newDescription);
+        console.log(global.prisma);
 
-        try {
-            const firstApiResponse = await sendFirstApiRequest(bodyHtml);
+        // Set up Shopify credentials
+    const shopifyDomain = 'quickstart-de06169f.myshopify.com'; // Replace with your shop's domain
+    const accessToken = 'shpua_9064dd089e62afa687393e4c036dd74c'; // Replace with your access token
 
-            // Extract token from first API response
-            const token = firstApiResponse.token;
+    try {
+        // Make the API request to update the product
+        const response = await fetch(`https://${shopifyDomain}/admin/api/2022-04/products/${productId}.json`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Shopify-Access-Token': accessToken,
+            },
+            body: JSON.stringify({
+                product: {
+                    id: productId,
+                    body_html: newDescription,
+                },
+            }),
+        });
 
-            // Send the token to the second API and get the response
-            const finalResponse = await sendSecondApiRequest(token);
-
-            // Update the product on Shopify with the final response data
-            await updateProductOnShopify(productId, finalResponse.modifiedDescription, shop);
-
-        } catch (error) {
-            console.error('Error in webhook handling:', error);
-            // Handle the error appropriately
+        if (!response.ok) {
+            throw new Error(`Error: ${response.status}`);
         }
+
+        const responseData = await response.json();
+        console.log('Product updated:', responseData);
+
+        return new Response(null, { status: 200 });
+    } catch (error) {
+        console.error('Failed to update product:', error);
+        return new Response('Failed to update product', { status: 500 });
+    }
     } else {
         throw new Response('Unhandled webhook topic', { status: 404 });
     }
 
     return new Response(null, { status: 200 });
 };
-async function sendFirstApiRequest(description) {
-    try {
-        const fetch = (await import('node-fetch')).default; // Dynamically import fetch
-
-        const response = await fetch('https://api.test.marketing.deal.ai/api/2024-01/product/start', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Deal-AI-API-Key': '6e064394d5f7b3aec7a4edc25f70ef35c9a1e3da464c8b5bf1c70d0416fd56c9',
-            },
-            body: JSON.stringify({
-                tone: 'Inspirational',
-                businessDescription: description,
-                language: 'English',
-                seoTags: [''], // Adjust this as necessary
-            }),
-        });
-
-        if (response.ok) {
-            const responseData = await response.json();
-            console.log('First API response successful');
-            return responseData;
-        } else {
-            throw new Error('Failed to send data to first API');
-        }
-    } catch (error) {
-        console.error('Error in sendFirstApiRequest:', error);
-        throw error; // Rethrow the error to be handled in the caller
-    }
-}
-
-async function sendSecondApiRequest(token) {
-    try {
-        const fetch = (await import('node-fetch')).default; // Dynamically import fetch
-
-        const resultResponse = await fetch(`https://api.test.marketing.deal.ai/api/2024-01/product/end/${token}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Deal-AI-API-Key': '6e064394d5f7b3aec7a4edc25f70ef35c9a1e3da464c8b5bf1c70d0416fd56c9',
-            },
-        });
-
-        if (resultResponse.ok) {
-            const resultData = await resultResponse.json();
-            console.log('Second API response successful');
-            return resultData;
-        } else {
-            throw new Error('Failed to fetch result from second API');
-        }
-    } catch (error) {
-        console.error('Error in sendSecondApiRequest:', error);
-        throw error; // Rethrow the error to be handled in the caller
-    }
-}
-
-
-
-
-/*const SibApiV3Sdk = require('sib-api-v3-sdk');
-        const defaultClient = SibApiV3Sdk.ApiClient.instance;
-        var apiKey = defaultClient.authentications['api-key'];
-
-        apiKey.apiKey = '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'; 
-        const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-        
-        // Convert payload to a string for email content
-        const payloadString = JSON.stringify(payload, null, 2); // Beautify the JSON string
-        const sendSmtpEmail = {
-            to: [{ email: 'aliasgersw@gmail.com', name: 'Recipient Name' }],
-            sender: { email: 'aliasgersw@gmail.com', name: 'ali asger' },
-            subject: 'New Product Created in Shopify',
-            htmlContent: `<p>Hello,</p><p>New product created:</p><pre>${payloadString}</pre>`
-        };
-
-        try {
-            await apiInstance.sendTransacEmail(sendSmtpEmail);
-            console.log('Email sent successfully');
-        } catch (error) {
-            console.error('Error sending email:', error);
-        }
-*/
