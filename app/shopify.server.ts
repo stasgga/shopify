@@ -27,7 +27,7 @@ const shopify = shopifyApp({
     },
     PRODUCTS_CREATE: {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/ProductCreate",
+      callbackUrl: "/productupdate",
     },
   },
 

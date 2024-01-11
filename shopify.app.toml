@@ -1,23 +1,23 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 name = "deal-ai"
-client_id = "d6f1f127c09bd28af9939ff2073e6e34"
-application_url = "https://hood-comparisons-successfully-enemy.trycloudflare.com"
+client_id = "52c88f789e52c89b2061877c6eab2057"
+application_url = "https://assisted-point-cvs-theoretical.trycloudflare.com"
 embedded = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = ""
+scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://hood-comparisons-successfully-enemy.trycloudflare.com/auth/callback",
-  "https://hood-comparisons-successfully-enemy.trycloudflare.com/auth/shopify/callback",
-  "https://hood-comparisons-successfully-enemy.trycloudflare.com/api/auth/callback"
+  "https://assisted-point-cvs-theoretical.trycloudflare.com/auth/callback",
+  "https://assisted-point-cvs-theoretical.trycloudflare.com/auth/shopify/callback",
+  "https://assisted-point-cvs-theoretical.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
-api_version = "2024-01"
+api_version = "2023-10"
 
 [pos]
 embedded = false
