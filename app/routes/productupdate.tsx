@@ -1,51 +1,83 @@
 import { ActionFunction } from '@remix-run/node';
 import { authenticate } from '~/shopify.server';
+import { fetchMarketingToken , handleTokenSubmit  } from './api'
 
 export const action: ActionFunction = async ({ request }) => {
-    const { topic, payload } = await authenticate.webhook(request);
+    const { topic, payload,admin,session } = await authenticate.webhook(request);
+    
+    const shopName = session.shop;
+
+    const apiKeyRecord = await prisma.dealAiAppKey.findFirst({
+     where: {
+        shop: shopName,
+      },
+    });
+  
+    if (!apiKeyRecord) {
+      throw new Error('API key not found for the shop');
+    }
+  
+    const DealAIAPIKey = apiKeyRecord.key;
+
+
 
     if (topic === 'PRODUCTS_CREATE') {
-        // Extract details from the payload
-        const productId = payload.id;
-        const newDescription = "New Product Description :)";
+        const globalProductId = payload.admin_graphql_api_id; // Extract the global ID
+        const productId = payload.id; // Make sure this is the correct path to the product ID
+        
+        const description = payload.body_html;
+        
+        const token = await fetchMarketingToken(description,DealAIAPIKey);
+
+        if (token) {
+
+            await handleTokenSubmit(token,DealAIAPIKey).then(response => {
+                // Assuming response is structured as shown in the error message
+                if (response && response.response && response.response.length > 0) {
+                    productDescription = response.response[0].product;
+                } else {
+                    throw new Error("Invalid response structure");
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                // Handle the error, maybe set productDescription to a default value or error message
+                productDescription = "Error occurred: " + error.message;
+            });
+        }
+
         console.log(productId);
-        console.log(newDescription);
+        console.log(description);
 
-     // Set up Shopify credentials
-     const shopifyDomain = 'quickstart-de06169f.myshopify.com'; // Replace with your shop's domain
-     const accessToken = 'shpua_eac2f8e310d3d2383d5e34401f7438f0'; // Replace with your access token
+        try {
+           
+             await admin?.graphql(
+              `#graphql
+              mutation productUpdate($input: ProductInput!) {
+                productUpdate(input: $input) {
+                  product {
+                    id                  
+                    descriptionHtml
+                  }
+                }
+              }`,
+              {
+                variables: {
+                  input: {
+                    id: globalProductId, 
+                    
+                    descriptionHtml: productDescription 
+                  }
+                }
+              }
+            );
+                      
+        } catch (error) {
+            console.error('Error updating product:', error);
+            throw new Response('Error processing webhook', { status: 500 });
+        }
+    } else {
+        throw new Response('Unhandled webhook topic', { status: 404 });
+    }
 
-     try {
-         // Make the API request to update the product
-         const response = await fetch(`https://${shopifyDomain}/admin/api/2022-04/products/${productId}.json`, {
-             method: 'PUT',
-             headers: {
-                 'Content-Type': 'application/json',
-                 'X-Shopify-Access-Token': accessToken,
-             },
-             body: JSON.stringify({
-                 product: {
-                     id: productId,
-                     body_html: newDescription,
-                 },
-             }),
-         });
-
-         if (!response.ok) {
-             throw new Error(`Error: ${response.status}`);
-         }
-
-         const responseData = await response.json();
-         console.log('Product updated:', responseData);
-
-         return new Response(null, { status: 200 });
-     } catch (error) {
-         console.error('Failed to update product:', error);
-         return new Response('Failed to update product', { status: 500 });
-     }
- } else {
-     throw new Response('Unhandled webhook topic', { status: 404 });
- }
-
- return new Response(null, { status: 200 });
+    return new Response(null, { status: 200 });
 };

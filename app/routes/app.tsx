@@ -19,7 +19,11 @@ export default function App() {
 
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
-      
+      <head>
+        <ui-nav-menu>
+          <a href="api-key">API-KEY</a>
+        </ui-nav-menu>
+      </head>
       <Outlet />
     </AppProvider>
   );
