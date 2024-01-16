@@ -1,75 +1,100 @@
 import { ActionFunction } from '@remix-run/node';
 import { authenticate } from '~/shopify.server';
-import { fetchMarketingToken , handleTokenSubmit  } from './api'
+import { fetchMarketingToken, updateProductDescription, queryDealAI, endDealAI } from './api'
+const Redis = require('ioredis');
+const subscriber = new Redis({
+  password: process.env.REDIS_PASSWORD,
+  host: process.env.REDIS_HOST,
+  port: process.env.REDIS_PORT,
+});
+
+subscriber.subscribe('createProductQueue');
 
 export const action: ActionFunction = async ({ request }) => {
-    const { topic, payload,admin,session } = await authenticate.webhook(request);
-    
-    const shopName = session.shop;
+  const { topic, payload, session } = await authenticate.webhook(request);
 
-    const apiKeyRecord = await prisma.dealAiAppKey.findFirst({
-     where: {
-        shop: shopName,
-      },
+  const apiKeyRecord = await prisma.dealAiAppKey.findFirst({
+    where: {
+      shop: session.shop,
+    },
+  });
+  if (!apiKeyRecord) {
+    throw new Error('API key not found for the shop');
+  }
+
+  const DealAIAPIKey = apiKeyRecord.key;
+
+  if (topic !== 'PRODUCTS_CREATE') {
+    return;
+  }
+
+  payload.DealAIAPIKey = DealAIAPIKey;
+  payload.shopifyAccessToken = session.accessToken;
+  payload.shopName = session.shop;
+
+
+  const token = await fetchMarketingToken(payload.body_html, DealAIAPIKey);
+
+  if (token) {
+    payload.dealAIToken = token;
+
+    const publisher = new Redis({
+      password: process.env.REDIS_PASSWORD,
+      host: process.env.REDIS_HOST,
+      port: process.env.REDIS_PORT,
     });
-  
-    if (!apiKeyRecord) {
-      throw new Error('API key not found for the shop');
-    }
-  
-    const DealAIAPIKey = apiKeyRecord.key;
 
+    console.log("Webhook Publisher");
 
+    publisher.publish('createProductQueue', JSON.stringify(payload));
+  }
 
-    if (topic === 'PRODUCTS_CREATE') {
-        const globalProductId = payload.admin_graphql_api_id;
-        const productId = payload.id; 
-        const description = payload.body_html;
-        const token = await fetchMarketingToken(description,DealAIAPIKey);
-      if (token) {
-            await handleTokenSubmit(token,DealAIAPIKey).then(response => {
-              if (response && response.response && response.response.length > 0) {
-                newDescription = response.response[0].product;
-                console.log("Response received:", response);
-              }              
-            }).catch(error => {
-                console.error('Error:', error);
+  return new Response(null, { status: 200 });
+
+}
+
+subscriber.on('message', async (channel, message) => {
+  console.log(`Received message with ${channel} and ${message}`);
+  if (channel == 'createProductQueue') {
+    // Process the received message
+    try {
+      const payload = JSON.parse(message); // Assuming message is a JSON string
+      const productId = payload.id;
+      const { DealAIAPIKey, dealAIToken } = payload;
+
+      if (dealAIToken) {
+        let response = await queryDealAI(dealAIToken, DealAIAPIKey);
+        console.log("Query Deal AI", response);
+        if (!response || response.status !== 'completed') {
+          await new Promise(resolve => setTimeout(resolve, 5000));
+
+          const publisher = new Redis({
+            password: process.env.REDIS_PASSWORD,
+            host: process.env.REDIS_HOST,
+            port: process.env.REDIS_PORT,
           });
+
+          console.log("PubSub Publisher");
+
+          publisher.publish(channel, message);
+          return;
         }
-        try {
-           
-          await admin?.graphql(
-           `#graphql
-           mutation productUpdate($input: ProductInput!) {
-             productUpdate(input: $input) {
-               product {
-                 id                  
-                 descriptionHtml
-               }
-             }
-           }`,
-           {
-             variables: {
-               input: {
-                 id: globalProductId, 
-                 
-                 descriptionHtml: newDescription,
-               }
-             }
-           }
-         );
-                   
-     } catch (error) {
-         console.error('Error updating product:', error);
-         throw new Response('Error processing webhook', { status: 500 });
-     }                                       
 
+        response = await endDealAI(dealAIToken, DealAIAPIKey);
 
+        if (response && response.response && response.response.length > 0) {
+          const productDescription = response.response[0].product;
+          // Update product description in Shopify
+          const shopifyStoreUrl = `https://${payload.shopName}`;
+          const shopifyAccessToken = payload.shopifyAccessToken;
 
-      
-    } else {
-        throw new Response('Unhandled webhook topic', { status: 404 });
+          let pdo = { shopifyStoreUrl, shopifyAccessToken, productId, productDescription };
+          await updateProductDescription(pdo);
+        }
+      }
+    } catch (error) {
+      console.error('Error processing message from Redis:', error);
+      // Handle processing error
     }
-
-    return new Response(null, { status: 200 });
-};
+  }
+});
