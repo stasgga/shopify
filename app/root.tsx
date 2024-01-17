@@ -5,7 +5,7 @@ import {
   Meta,
   Outlet,
   Scripts,
-  ScrollRestoration,
+  ScrollRestoration
 } from '@remix-run/react';
 
 interface ResponseData {
@@ -25,7 +25,6 @@ const App: React.FC = () => {
         
       </head>
       <body>
-    
         <Outlet />
         <ScrollRestoration />
         <LiveReload />

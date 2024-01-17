@@ -2,7 +2,7 @@
 
 name = "deal-ai"
 client_id = "52c88f789e52c89b2061877c6eab2057"
-application_url = "https://officer-workforce-jar-purchasing.trycloudflare.com"
+application_url = "https://assembled-nano-universe-death.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://officer-workforce-jar-purchasing.trycloudflare.com/auth/callback",
-  "https://officer-workforce-jar-purchasing.trycloudflare.com/auth/shopify/callback",
-  "https://officer-workforce-jar-purchasing.trycloudflare.com/api/auth/callback"
+  "https://assembled-nano-universe-death.trycloudflare.com/auth/callback",
+  "https://assembled-nano-universe-death.trycloudflare.com/auth/shopify/callback",
+  "https://assembled-nano-universe-death.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
