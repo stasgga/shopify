@@ -7,6 +7,7 @@ const subscriber = new Redis({
   host: process.env.REDIS_HOST,
   port: process.env.REDIS_PORT,
 });
+import prisma from "../db.server";
 
 subscriber.subscribe('createProductQueue');
 
