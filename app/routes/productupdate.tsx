@@ -22,18 +22,18 @@ export const action: ActionFunction = async ({ request }) => {
     throw new Error('API key not found for the shop');
   }
 
-  const DealAIAPIKey = apiKeyRecord.key;
+  const dealAiAppKey = apiKeyRecord.key;
 
   if (topic !== 'PRODUCTS_CREATE') {
     return;
   }
 
-  payload.DealAIAPIKey = DealAIAPIKey;
+  payload.dealAiAppKey = dealAiAppKey;
   payload.shopifyAccessToken = session.accessToken;
   payload.shopName = session.shop;
 
 
-  const token = await fetchMarketingToken(payload.body_html, DealAIAPIKey);
+  const token = await fetchMarketingToken(payload.body_html, dealAiAppKey);
 
   if (token) {
     payload.dealAIToken = token;
@@ -60,10 +60,10 @@ subscriber.on('message', async (channel, message) => {
     try {
       const payload = JSON.parse(message); // Assuming message is a JSON string
       const productId = payload.id;
-      const { DealAIAPIKey, dealAIToken } = payload;
+      const { dealAiAppKey, dealAIToken } = payload;
 
       if (dealAIToken) {
-        let response = await queryDealAI(dealAIToken, DealAIAPIKey);
+        let response = await queryDealAI(dealAIToken, dealAiAppKey);
         console.log("Query Deal AI", response);
         if (!response || response.status !== 'completed') {
           await new Promise(resolve => setTimeout(resolve, 5000));
@@ -80,7 +80,7 @@ subscriber.on('message', async (channel, message) => {
           return;
         }
 
-        response = await endDealAI(dealAIToken, DealAIAPIKey);
+        response = await endDealAI(dealAIToken, dealAiAppKey);
 
         if (response && response.response && response.response.length > 0) {
           const productDescription = response.response[0].product;

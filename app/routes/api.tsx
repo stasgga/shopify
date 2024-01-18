@@ -1,4 +1,4 @@
-async function fetchMarketingToken(description, DealAIAPIKey) {
+async function fetchMarketingToken(description, dealAiAppKey) {
   let token = '';
   try {
     const marketingResponse = await fetch(
@@ -7,7 +7,7 @@ async function fetchMarketingToken(description, DealAIAPIKey) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Deal-AI-API-Key': DealAIAPIKey,
+          'Deal-AI-API-Key': dealAiAppKey,
         },
         body: JSON.stringify({
           businessDescription: description,
@@ -68,7 +68,7 @@ async function updateProductDescription(params) {
     });
 }
 
-async function endDealAI(token, DealAIAPIKey) {
+async function endDealAI(token, dealAiAppKey) {
   // Second API call
   const endResponse = await fetch(
     `https://api.test.marketing.deal.ai/api/2024-01/product/end/${token}`,
@@ -76,7 +76,7 @@ async function endDealAI(token, DealAIAPIKey) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Deal-AI-API-Key': DealAIAPIKey,
+        'Deal-AI-API-Key': dealAiAppKey,
       },
     }
   );
@@ -92,7 +92,7 @@ async function endDealAI(token, DealAIAPIKey) {
 }
 
 
-async function queryDealAI(token, DealAIAPIKey) {
+async function queryDealAI(token, dealAiAppKey) {
   try {
     const queryResponse = await fetch(
       `https://api.test.marketing.deal.ai/api/2024-01/product/query/${token}`,
@@ -100,7 +100,7 @@ async function queryDealAI(token, DealAIAPIKey) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Deal-AI-API-Key': DealAIAPIKey,
+          'Deal-AI-API-Key': dealAiAppKey,
         },
       }
     );
