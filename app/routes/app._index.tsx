@@ -15,7 +15,7 @@ import {
 
 } from '@shopify/polaris';
 import prisma from '../db.server';
-import { authenticate } from '~/shopify.server';
+import { authenticate } from '../shopify.server';
 
 
 export async function loader({ request }: LoaderFunctionArgs) {

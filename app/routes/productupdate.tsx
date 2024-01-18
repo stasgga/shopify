@@ -1,5 +1,5 @@
 import { ActionFunction } from '@remix-run/node';
-import { authenticate } from '~/shopify.server';
+import { authenticate } from '../shopify.server';
 import { fetchMarketingToken, updateProductDescription, queryDealAI, endDealAI } from './api'
 const Redis = require('ioredis');
 const subscriber = new Redis({
@@ -22,18 +22,18 @@ export const action: ActionFunction = async ({ request }) => {
     throw new Error('API key not found for the shop');
   }
 
-  const dealAiAppKey = apiKeyRecord.key;
+  const DealAIAPIKey = apiKeyRecord.key;
 
   if (topic !== 'PRODUCTS_CREATE') {
     return;
   }
 
-  payload.dealAiAppKey = dealAiAppKey;
+  payload.DealAIAPIKey = DealAIAPIKey;
   payload.shopifyAccessToken = session.accessToken;
   payload.shopName = session.shop;
 
 
-  const token = await fetchMarketingToken(payload.body_html, dealAiAppKey);
+  const token = await fetchMarketingToken(payload.body_html, DealAIAPIKey);
 
   if (token) {
     payload.dealAIToken = token;
@@ -60,10 +60,10 @@ subscriber.on('message', async (channel, message) => {
     try {
       const payload = JSON.parse(message); // Assuming message is a JSON string
       const productId = payload.id;
-      const { dealAiAppKey, dealAIToken } = payload;
+      const { DealAIAPIKey, dealAIToken } = payload;
 
       if (dealAIToken) {
-        let response = await queryDealAI(dealAIToken, dealAiAppKey);
+        let response = await queryDealAI(dealAIToken, DealAIAPIKey);
         console.log("Query Deal AI", response);
         if (!response || response.status !== 'completed') {
           await new Promise(resolve => setTimeout(resolve, 5000));
@@ -80,7 +80,7 @@ subscriber.on('message', async (channel, message) => {
           return;
         }
 
-        response = await endDealAI(dealAIToken, dealAiAppKey);
+        response = await endDealAI(dealAIToken, DealAIAPIKey);
 
         if (response && response.response && response.response.length > 0) {
           const productDescription = response.response[0].product;
