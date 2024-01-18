@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { json, ActionFunction } from '@remix-run/node';
+
+import React, { useEffect, useState } from 'react';
+import { json, ActionFunction, LoaderFunctionArgs } from '@remix-run/node';
 import { useSubmit, useLoaderData, Form } from '@remix-run/react';
 import {
   Page,
@@ -17,13 +18,13 @@ import prisma from '../db.server';
 import { authenticate } from '~/shopify.server';
 
 
-export async function loader({ request }) {
+export async function loader({ request }: LoaderFunctionArgs) {
   try {
     const { session } = await authenticate.admin(request);
     const shopName = session?.shop;
 
     if (shopName) {
-      const existingKey = await prisma.DealAiAppKey.findUnique({
+      const existingKey = await prisma.dealAiAppKey.findUnique({
         where: { shop: shopName },
       });
       return json({ apiKey: existingKey?.key || '' });
@@ -47,13 +48,13 @@ export const action: ActionFunction = async ({ request }) => {
 
     if (reset) {
       // Handle reset
-      await prisma.DealAiAppKey.delete({
+      await prisma.dealAiAppKey.delete({
         where: { shop: shopName },
       });
       return json({ reset: true });
     } else if (apiKey && shopName) {
       // Handle API key submission
-      await prisma.DealAiAppKey.create({
+      await prisma.dealAiAppKey.create({
         data: {
           key: apiKey,
           shop: shopName,
@@ -90,7 +91,7 @@ export default function ApiKeyPage() {
 
   return (
     <Page>
-      <ui-title-bar title="Deal AI Settings"></ui-title-bar>
+      <div>Title: Deal AI Settings</div>
       <Layout>
         <Layout.Section oneHalf>
           <Card sectioned>
@@ -113,7 +114,7 @@ export default function ApiKeyPage() {
                 <Button size="large" variant='primary' tone="critical" onClick={handleReset}>Change API Key</Button>
               ) : (
                 <Form onSubmit={handleSubmit}>
-                  <TextField
+                  <TextField                        
                     type="text"
                     value={key}
                     onChange={(newValue) => setKey(newValue)}
@@ -131,7 +132,7 @@ export default function ApiKeyPage() {
         
         
         
-        <Layout.Section oneHalf>
+        <Layout.Section>
 
           <Card roundedAbove="sm">
             <Text as="h2" variant="headingSm">

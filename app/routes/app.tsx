@@ -15,14 +15,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function App() {
-  const { apiKey } = useLoaderData<typeof loader>();
+  const { apiKey } = useLoaderData<{ apiKey: string }>();
 
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
       <head>
-        <ui-nav-menu>
-        
-        </ui-nav-menu>
+        {/* Your content here */}
       </head>
       <Outlet />
     </AppProvider>
