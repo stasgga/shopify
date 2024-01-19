@@ -1,3 +1,5 @@
+import {apiVersion} from "../shopify.server";
+
 async function fetchMarketingToken(description, dealAiAppKey) {
   let token = '';
   try {
@@ -33,7 +35,7 @@ async function fetchMarketingToken(description, dealAiAppKey) {
 
 async function updateProductDescription(params) {
   const { shopifyStoreUrl, shopifyAccessToken, productId, productDescription } = params;
-  const apiUrl = `${shopifyStoreUrl}/admin/api/2023-10/products/${productId}.json`;
+  const apiUrl = `${shopifyStoreUrl}/admin/api/${apiVersion}/products/${productId}.json`;
 
   try {
     const response = await fetch(apiUrl, {
