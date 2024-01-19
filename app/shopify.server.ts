@@ -8,6 +8,7 @@ import {
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import { restResources } from "@shopify/shopify-api/rest/admin/2023-10";
 import prisma from "./db.server";
+require('dotenv').config();
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -19,17 +20,24 @@ const shopify = shopifyApp({
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
   restResources,
+
   webhooks: {
     APP_UNINSTALLED: {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks",
+      callbackUrl: '/webhooks',
+    },
+    PRODUCTS_CREATE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/productupdate",
     },
   },
+
   hooks: {
     afterAuth: async ({ session }) => {
       shopify.registerWebhooks({ session });
     },
   },
+
   future: {
     v3_webhookAdminContext: true,
     v3_authenticatePublic: true,
@@ -39,6 +47,7 @@ const shopify = shopifyApp({
     : {}),
 });
 
+
 export default shopify;
 export const apiVersion = LATEST_API_VERSION;
 export const addDocumentResponseHeaders = shopify.addDocumentResponseHeaders;
@@ -47,3 +56,5 @@ export const unauthenticated = shopify.unauthenticated;
 export const login = shopify.login;
 export const registerWebhooks = shopify.registerWebhooks;
 export const sessionStorage = shopify.sessionStorage;
+
+

@@ -1,6 +1,8 @@
 {
   "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["app/routes/api.tsx", "app/routes/productupdate.tsx", "app/routes/app._index.tsx"],
   "compilerOptions": {
+    "resolveJsonModule": true,
     "lib": ["DOM", "DOM.Iterable", "ES2019"],
     "strict": true,
     "skipLibCheck": true,
@@ -10,6 +12,7 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "allowJs": true,
+    "esModuleInterop": true,
     "jsx": "react-jsx",
     "module": "Node16",
     "moduleResolution": "Node16",
@@ -18,8 +21,6 @@
     "paths": {
       "~/*": ["./app/*"]
     },
-    "types": [
-      "node", "@shopify/app-bridge-types"
-    ]
+        
   }
 }
