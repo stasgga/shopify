@@ -111,10 +111,9 @@ async function queryDealAI(token, dealAiAppKey, maxRetries = 5) {
       }
 
       // Handling rate limit headers
-      const rateLimitRemaining = queryResponse.headers.get('X-RateLimit-Remaining');
-      const rateLimitReset = queryResponse.headers.get('X-RateLimit-Reset');
+      let rateLimitRemaining = queryResponse.headers.get('X-RateLimit-Remaining');
 
-      if (rateLimitRemaining && rateLimitRemaining === '0' && rateLimitReset) {
+      if (rateLimitRemaining && rateLimitRemaining <= 0) {
         const currentTime = Date.now();
         const resetTime = new Date(rateLimitReset).getTime();
         backoff = Math.max(resetTime - currentTime, 1000); // Ensure at least 1 second backoff
