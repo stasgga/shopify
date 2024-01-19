@@ -1,4 +1,4 @@
-import {apiVersion} from "../shopify.server";
+
 
 async function fetchMarketingToken(description, dealAiAppKey) {
   let token = '';
@@ -35,7 +35,7 @@ async function fetchMarketingToken(description, dealAiAppKey) {
 
 async function updateProductDescription(params) {
   const { shopifyStoreUrl, shopifyAccessToken, productId, productDescription } = params;
-  const apiUrl = `${shopifyStoreUrl}/admin/api/${apiVersion}/products/${productId}.json`;
+  const apiUrl = `${shopifyStoreUrl}/admin/api/2023-10/products/${productId}.json`;
 
   try {
     const response = await fetch(apiUrl, {
@@ -111,9 +111,10 @@ async function queryDealAI(token, dealAiAppKey, maxRetries = 5) {
       }
 
       // Handling rate limit headers
-      let rateLimitRemaining = queryResponse.headers.get('X-RateLimit-Remaining');
+      const rateLimitRemaining = queryResponse.headers.get('X-RateLimit-Remaining');
+      const rateLimitReset = queryResponse.headers.get('X-RateLimit-Reset');
 
-      if (rateLimitRemaining && rateLimitRemaining <= 0) {
+      if (rateLimitRemaining && rateLimitRemaining === '0' && rateLimitReset) {
         const currentTime = Date.now();
         const resetTime = new Date(rateLimitReset).getTime();
         backoff = Math.max(resetTime - currentTime, 1000); // Ensure at least 1 second backoff

@@ -2,7 +2,7 @@
 
 name = "deal-ai"
 client_id = "52c88f789e52c89b2061877c6eab2057"
-application_url = "https://unlimited-scripting-prison-maple.trycloudflare.com"
+application_url = "https://calcium-accompanied-sublime-transcription.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://unlimited-scripting-prison-maple.trycloudflare.com/auth/callback",
-  "https://unlimited-scripting-prison-maple.trycloudflare.com/auth/shopify/callback",
-  "https://unlimited-scripting-prison-maple.trycloudflare.com/api/auth/callback"
+  "https://calcium-accompanied-sublime-transcription.trycloudflare.com/auth/callback",
+  "https://calcium-accompanied-sublime-transcription.trycloudflare.com/auth/shopify/callback",
+  "https://calcium-accompanied-sublime-transcription.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
