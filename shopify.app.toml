@@ -2,7 +2,7 @@
 
 name = "deal-ai"
 client_id = "52c88f789e52c89b2061877c6eab2057"
-application_url = "https://temperature-ds-ira-suggestion.trycloudflare.com"
+application_url = "https://wish-thats-licence-accepted.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://temperature-ds-ira-suggestion.trycloudflare.com/auth/callback",
-  "https://temperature-ds-ira-suggestion.trycloudflare.com/auth/shopify/callback",
-  "https://temperature-ds-ira-suggestion.trycloudflare.com/api/auth/callback"
+  "https://wish-thats-licence-accepted.trycloudflare.com/auth/callback",
+  "https://wish-thats-licence-accepted.trycloudflare.com/auth/shopify/callback",
+  "https://wish-thats-licence-accepted.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
