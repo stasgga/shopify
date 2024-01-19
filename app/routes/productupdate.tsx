@@ -1,15 +1,28 @@
 import { ActionFunction } from '@remix-run/node';
 import { authenticate } from '../shopify.server';
 import { fetchMarketingToken, updateProductDescription, queryDealAI, endDealAI } from './api'
-const Redis = require('ioredis');
-const subscriber = new Redis({
-  password: process.env.REDIS_PASSWORD,
-  host: process.env.REDIS_HOST,
-  port: process.env.REDIS_PORT,
-});
 import prisma from "../db.server";
 
+const Redis = require('ioredis');
+
+function createRedisClient() {
+  try {
+    return new Redis({
+      password: process.env.REDIS_PASSWORD,
+      host: process.env.REDIS_HOST,
+      port: process.env.REDIS_PORT,
+    });
+  } catch (error) {
+    console.error('Error creating Redis client:', error);
+    // Handle Redis connection error (e.g., retry logic, fallback)
+  }
+}
+
+
+
+const subscriber = createRedisClient();
 subscriber.subscribe('createProductQueue');
+
 
 export const action: ActionFunction = async ({ request }) => {
   const { topic, payload, session } = await authenticate.webhook(request);
@@ -39,23 +52,31 @@ export const action: ActionFunction = async ({ request }) => {
   if (token) {
     payload.dealAIToken = token;
 
-    const publisher = new Redis({
-      password: process.env.REDIS_PASSWORD,
-      host: process.env.REDIS_HOST,
-      port: process.env.REDIS_PORT,
-    });
+    const publisher = createRedisClient();
+    if (!publisher) {
+      console.error('Failed to create Redis publisher');
+      return new Response(null, { status: 500 }); // Indicate server error
+    }
 
     console.log("Webhook Publisher");
 
-    publisher.publish('createProductQueue', JSON.stringify(payload));
+
+   // Improved error handling for Redis publish
+    try {
+      await publisher.publish('createProductQueue', JSON.stringify(payload));
+    } catch (publishError) {
+      console.error('Error publishing to Redis:', publishError);
+      // Handle publishing error (e.g., retry logic, fallback)
+      return new Response(null, { status: 500 });
+    }
   }
 
   return new Response(null, { status: 200 });
-
 }
 
 subscriber.on('message', async (channel, message) => {
   console.log(`Received message with ${channel} and ${message}`);
+
   if (channel == 'createProductQueue') {
     // Process the received message
     try {
@@ -63,9 +84,12 @@ subscriber.on('message', async (channel, message) => {
       const productId = payload.id;
       const { DealAIAPIKey, dealAIToken } = payload;
 
+      
+
       if (dealAIToken) {
         let response = await queryDealAI(dealAIToken, DealAIAPIKey);
         console.log("Query Deal AI", response);
+
         if (!response || response.status !== 'completed') {
           await new Promise(resolve => setTimeout(resolve, 5000));
 
@@ -93,8 +117,8 @@ subscriber.on('message', async (channel, message) => {
           await updateProductDescription(pdo);
         }
       }
-    } catch (error) {
-      console.error('Error processing message from Redis:', error);
+    } catch (processError) {
+      console.error('Error processing message from Redis:', processError);
       // Handle processing error
     }
   }
