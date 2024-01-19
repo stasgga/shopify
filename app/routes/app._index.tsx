@@ -10,7 +10,7 @@ import {
   Button,
   Banner,
   Box,
-  BlockStack,
+  BlockStack,   
   Text
 
 } from '@shopify/polaris';
