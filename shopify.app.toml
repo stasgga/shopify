@@ -2,7 +2,7 @@
 
 name = "deal-ai"
 client_id = "52c88f789e52c89b2061877c6eab2057"
-application_url = "https://beginner-genesis-coal-developmental.trycloudflare.com"
+application_url = "https://unlimited-scripting-prison-maple.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://beginner-genesis-coal-developmental.trycloudflare.com/auth/callback",
-  "https://beginner-genesis-coal-developmental.trycloudflare.com/auth/shopify/callback",
-  "https://beginner-genesis-coal-developmental.trycloudflare.com/api/auth/callback"
+  "https://unlimited-scripting-prison-maple.trycloudflare.com/auth/callback",
+  "https://unlimited-scripting-prison-maple.trycloudflare.com/auth/shopify/callback",
+  "https://unlimited-scripting-prison-maple.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
