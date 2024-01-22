@@ -91,7 +91,6 @@ export default function ApiKeyPage() {
 
   return (
     <Page>
-      <div>Title: Deal AI Settings</div>
       <Layout>
         <Layout.Section oneHalf>
           <Card sectioned>
@@ -144,7 +143,7 @@ export default function ApiKeyPage() {
                   Configure additional settings for your Deal AI app here.
                 </Text>
               </BlockStack>
-              
+
             </Box>
 
           </Card>
