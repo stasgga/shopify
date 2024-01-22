@@ -1,8 +1,6 @@
-import { apiVersion } from '../shopify.server';
-
 async function fetchMarketingToken(description, dealAiAppKey) {
   let token = '';
-  
+  try {
     const marketingResponse = await fetch(
       'https://api.test.marketing.deal.ai/api/2024-01/product/start',
       {
@@ -26,7 +24,9 @@ async function fetchMarketingToken(description, dealAiAppKey) {
     } else {
       console.error('Failed to get token from marketing API');
     }
-  
+  } catch (error) {
+    console.error('Error calling marketing API:', error);
+  }
   return token;
 }
 
@@ -35,7 +35,7 @@ async function updateProductDescription(params) {
 
   const { shopifyStoreUrl, shopifyAccessToken, productId, productDescription } = params;
 
-  const apiUrl = `${shopifyStoreUrl}/admin/api/${apiVersion}/products/${productId}.json`;
+  const apiUrl = `${shopifyStoreUrl}/admin/api/2023-10/products/${productId}.json`;
 
   const shopifyHeaders = {
     'Content-Type': 'application/json',
@@ -93,7 +93,7 @@ async function endDealAI(token, dealAiAppKey) {
 
 
 async function queryDealAI(token, dealAiAppKey) {
-  
+  try {
     const queryResponse = await fetch(
       `https://api.test.marketing.deal.ai/api/2024-01/product/query/${token}`,
       {
@@ -105,12 +105,13 @@ async function queryDealAI(token, dealAiAppKey) {
       }
     );
 
-    console.log('Query Response', queryResponse);
-
     return queryResponse.json();
 
    
- 
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
 }
 
 

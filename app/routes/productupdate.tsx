@@ -21,19 +21,13 @@ export const action: ActionFunction = async ({ request }) => {
   });
   if (!apiKeyRecord) {
     throw new Error('API key not found for the shop');
-
-
   }
-
-  
 
   const DealAIAPIKey = apiKeyRecord.key;
 
   if (topic !== 'PRODUCTS_CREATE') {
     return;
   }
-  
-
 
   payload.DealAIAPIKey = DealAIAPIKey;
   payload.shopifyAccessToken = session.accessToken;
@@ -55,18 +49,16 @@ export const action: ActionFunction = async ({ request }) => {
 
     publisher.publish('createProductQueue', JSON.stringify(payload));
   }
-  console.log(`payload= ${JSON.stringify(payload)}`);
+
   return new Response(null, { status: 200 });
 
 }
-
-
 
 subscriber.on('message', async (channel, message) => {
   console.log(`Received message with ${channel} and ${message}`);
   if (channel == 'createProductQueue') {
     // Process the received message
-    
+    try {
       const payload = JSON.parse(message); // Assuming message is a JSON string
       const productId = payload.id;
       const { DealAIAPIKey, dealAIToken } = payload;
@@ -91,8 +83,6 @@ subscriber.on('message', async (channel, message) => {
 
         response = await endDealAI(dealAIToken, DealAIAPIKey);
 
-        console.log("End Response", response);
-
         if (response && response.response && response.response.length > 0) {
           const productDescription = response.response[0].product;
           // Update product description in Shopify
@@ -100,10 +90,12 @@ subscriber.on('message', async (channel, message) => {
           const shopifyAccessToken = payload.shopifyAccessToken;
 
           let pdo = { shopifyStoreUrl, shopifyAccessToken, productId, productDescription };
-          console.log(pdo, 'Shopify API params');
           await updateProductDescription(pdo);
         }
       }
-    
+    } catch (error) {
+      console.error('Error processing message from Redis:', error);
+      // Handle processing error
+    }
   }
 });

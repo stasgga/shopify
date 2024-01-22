@@ -15,9 +15,8 @@ import {
 
 } from '@shopify/polaris';
 import prisma from '../db.server';
-import { authenticate,apiVersion } from '../shopify.server';
+import { authenticate } from '../shopify.server';
 
-console.log(`API_VERSON= ${apiVersion}`);
 
 export async function loader({ request }: LoaderFunctionArgs) {
   try {
@@ -92,7 +91,7 @@ export default function ApiKeyPage() {
 
   return (
     <Page>
-      
+      <div>Title: Deal AI Settings</div>
       <Layout>
         <Layout.Section oneHalf>
           <Card sectioned>
@@ -131,7 +130,7 @@ export default function ApiKeyPage() {
           </Card>
         </Layout.Section>
         
-    
+        
         
         <Layout.Section>
 
@@ -142,7 +141,6 @@ export default function ApiKeyPage() {
             <Box paddingBlock="200">
               <BlockStack gap="200">
                 <Text as="p" variant="bodyMd">
-                  Lets TEst
                   Configure additional settings for your Deal AI app here.
                 </Text>
               </BlockStack>
