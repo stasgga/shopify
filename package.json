@@ -38,12 +38,10 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "redis": "^4.6.12",
-    "shopify-api-node": "^3.12.7",
-    "sib-api-v3-sdk": "^8.5.0"
+    "shopify-api-node": "^3.12.7"
   },
   "devDependencies": {
     "@remix-run/eslint-config": "^2.0.0",
-    
     "@types/eslint": "^8.40.0",
     "@types/node": "^20.6.3",
     "@types/react": "^18.2.31",
