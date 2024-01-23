@@ -55,7 +55,7 @@ export const action: ActionFunction = async ({ request }) => {
 }
 
 subscriber.on('message', async (channel, message) => {
-  console.log(`Received message with ${channel} and ${message}`);
+  
   if (channel == 'createProductQueue') {
     // Process the received message
     try {
