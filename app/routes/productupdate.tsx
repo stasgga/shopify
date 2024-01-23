@@ -45,7 +45,7 @@ export const action: ActionFunction = async ({ request }) => {
       port: process.env.REDIS_PORT,
     });
 
-    console.log("Webhook Publisher");
+   
 
     publisher.publish('createProductQueue', JSON.stringify(payload));
   }
