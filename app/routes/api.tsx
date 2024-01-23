@@ -55,7 +55,7 @@ async function updateProductDescription(params) {
   })
     .then((response) => {
       if (!response.ok) {
-        console.log(response);
+        
         throw new Error('Failed to update product');
       }
       return response.json();
@@ -87,7 +87,7 @@ async function endDealAI(token, dealAiAppKey) {
   }
 
   const endResponseData = await endResponse.json();
-  console.log('End response:', endResponseData);
+ 
   return endResponseData; // Return the end response data
 }
 
@@ -109,7 +109,7 @@ async function queryDealAI(token, dealAiAppKey) {
 
    
   } catch (error) {
-    console.error('Error:', error);
+   
     throw error;
   }
 }

@@ -65,7 +65,7 @@ subscriber.on('message', async (channel, message) => {
 
       if (dealAIToken) {
         let response = await queryDealAI(dealAIToken, DealAIAPIKey);
-        console.log("Query Deal AI", response);
+        
         if (!response || response.status !== 'completed') {
           await new Promise(resolve => setTimeout(resolve, 5000));
 
