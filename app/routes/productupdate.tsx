@@ -75,7 +75,7 @@ subscriber.on('message', async (channel, message) => {
             port: process.env.REDIS_PORT,
           });
 
-          console.log("PubSub Publisher");
+         
 
           publisher.publish(channel, message);
           return;
