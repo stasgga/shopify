@@ -45,7 +45,7 @@ export const action: ActionFunction = async ({ request }) => {
       port: process.env.REDIS_PORT,
     });
 
-    console.log("Webhook Publisher");
+   
 
     publisher.publish('createProductQueue', JSON.stringify(payload));
   }
@@ -55,7 +55,7 @@ export const action: ActionFunction = async ({ request }) => {
 }
 
 subscriber.on('message', async (channel, message) => {
-  console.log(`Received message with ${channel} and ${message}`);
+  
   if (channel == 'createProductQueue') {
     // Process the received message
     try {
@@ -75,7 +75,7 @@ subscriber.on('message', async (channel, message) => {
             port: process.env.REDIS_PORT,
           });
 
-          console.log("PubSub Publisher");
+         
 
           publisher.publish(channel, message);
           return;
