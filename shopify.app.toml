@@ -2,7 +2,11 @@
 
 name = "deal-ai"
 client_id = "52c88f789e52c89b2061877c6eab2057"
+<<<<<<< Updated upstream
 application_url = "https://wish-thats-licence-accepted.trycloudflare.com"
+=======
+application_url = "https://savannah-alfred-belt-partially.trycloudflare.com"
+>>>>>>> Stashed changes
 embedded = true
 
 [access_scopes]
@@ -11,9 +15,15 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
+<<<<<<< Updated upstream
   "https://wish-thats-licence-accepted.trycloudflare.com/auth/callback",
   "https://wish-thats-licence-accepted.trycloudflare.com/auth/shopify/callback",
   "https://wish-thats-licence-accepted.trycloudflare.com/api/auth/callback"
+=======
+  "https://savannah-alfred-belt-partially.trycloudflare.com/auth/callback",
+  "https://savannah-alfred-belt-partially.trycloudflare.com/auth/shopify/callback",
+  "https://savannah-alfred-belt-partially.trycloudflare.com/api/auth/callback"
+>>>>>>> Stashed changes
 ]
 
 [webhooks]
