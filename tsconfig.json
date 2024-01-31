@@ -1,5 +1,5 @@
 {
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "app/routes/api.dealaikey.js"],
   "exclude": ["app/routes/api.tsx", "app/routes/productupdate.tsx", "app/routes/app._index.tsx"],
   "compilerOptions": {
     "resolveJsonModule": true,

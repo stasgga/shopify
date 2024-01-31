@@ -60,6 +60,10 @@ export async function updateIssues(id, newIssues) {
   
     return await res.json();
   }
+
+
+
+
   export async function getProductDetails(productId) {
     return await makeGraphQLQuery(
         `query Product($id: ID!) {
@@ -70,10 +74,12 @@ export async function updateIssues(id, newIssues) {
         { id: productId }
     );
 }
+
+
 export async function updateProductDescription(productId, newDescription) {
   const mutation = `
-      mutation ProductUpdate($id: ID!, $input: ProductInput!) {
-          productUpdate(id: $id, input: $input) {
+      mutation ProductUpdate($input: ProductInput!) {
+          productUpdate(input: $input) {
               product {
                   id
                   bodyHtml
@@ -87,24 +93,25 @@ export async function updateProductDescription(productId, newDescription) {
   `;
 
   const variables = {
-      id: productId,
       input: {
+          id: productId,
           bodyHtml: newDescription
       }
   };
 
   try {
-      const response = await makeGraphQLQuery(mutation, variables);
+    const response = await makeGraphQLQuery(mutation, variables);
+    console.log(response);
 
-      if (response.data && response.data.productUpdate) {
-          console.log('Product description updated successfully:', response.data.productUpdate);
-          return response.data.productUpdate;
-      } else if (response.errors) {
-          console.error('Error updating product description:', response.errors);
-          throw new Error('Failed to update product description');
-      }
-  } catch (error) {
-      console.error('Error in updateProductDescription:', error);
-      throw error;
-  }
+    if (response.data && response.data.productUpdate) {
+      
+        return response.data.productUpdate;
+    } else if (response.errors) {
+       
+        throw new Error('Failed to update product description');
+    }
+} catch (error) {
+    
+    throw error;
+}
 }

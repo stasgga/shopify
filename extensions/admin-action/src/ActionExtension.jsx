@@ -2,130 +2,125 @@ import { useCallback, useEffect, useState } from "react";
 import {
   reactExtension,
   useApi,
-  TextField,
   AdminAction,
   Button,
   TextArea,
   Box,
 } from "@shopify/ui-extensions-react/admin";
-import { getIssues, updateIssues,getProductDetails,updateProductDescription } from "./utils";
+import { getProductDetails, updateProductDescription } from "./utils";
+import { fetchMarketingToken, queryDealAI, endDealAI } from "../../../app/routes/api";
 
 const TARGET = "admin.product-details.action.render";
 
 export default reactExtension(TARGET, () => <App />);
 
 function App() {
-  const { close, data, intents } = useApi(TARGET);
-  const issueId = intents?.launchUrl
-    ? new URL(intents?.launchUrl)?.searchParams?.get("issueId")
-    : null;
-  const [loading, setLoading] = useState(issueId ? true : false);
-  const [issue, setIssue] = useState({ title: "", description: "" });
-  const [allIssues, setAllIssues] = useState([]);
-  const [formErrors, setFormErrors] = useState(null);
-  const { title, description, id } = issue;
-  const isEditing = id !== undefined;
-
+  const { close, data } = useApi(TARGET);
   const [productDescription, setProductDescription] = useState('');
   const [newDescription, setNewDescription] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [timer, setTimer] = useState(null);
+  const [countdown, setCountdown] = useState(180); // 3 minutes in seconds
 
   useEffect(() => {
     (async function fetchProductDetails() {
-      // Fetch product details including description
       const productDetails = await getProductDetails(data.selected[0].id);
-      if (productDetails && productDetails.data && productDetails.data.product) {
-        console.log(`product des=${productDetails.data.product.descriptionHtml}`)
+      if (productDetails?.data?.product) {
         setProductDescription(productDetails.data.product.descriptionHtml);
       }
     })();
-  }, []);
+  }, [data.selected]);
 
-
- 
-
-  const generateId = () => {
-    if (!allIssues.length) {
-      return 0;
+  useEffect(() => {
+    let interval;
+    if (isLoading && countdown > 0) {
+      interval = setInterval(() => {
+        setCountdown((prevCountdown) => prevCountdown - 1);
+      }, 1000);
+    } else {
+      clearInterval(interval);
     }
-    return allIssues[allIssues.length - 1].id + 1;
+    return () => clearInterval(interval);
+  }, [isLoading, countdown]);
+
+  fetchApiKey = async () => {
+    const res = await fetch(`api/dealaikey`);
+
+
+    if (!res.ok) {
+      console.error('Failed to fetch API key', res.statusText);
+      throw new Error('Failed to fetch API key');
+    }
+
+    const data = await res.json();
+
+    return data.dealAiAppKey;
   };
 
-  const validateForm = () => {
-    setFormErrors({
-      title: !Boolean(title),
-      description: !Boolean(description),
-    });
-    return Boolean(title) && Boolean(description);
+  const handleGenerateNewDescription = async () => {
+    setIsLoading(true);
+    setCountdown(180); // Reset countdown to 3 minutes
+
+    const currentDescription = productDescription;
+
+    const dealAiAppKey = await fetchApiKey();
+
+    const token = await fetchMarketingToken(currentDescription, dealAiAppKey);
+
+    let timeoutId = setTimeout(() => {
+      setIsLoading(false);
+      setTimer(null);
+    }, 180000); // 3 minutes
+
+    let response = await queryDealAI(token, dealAiAppKey);
+
+    // Loop until the status is 'completed' or time runs out
+    while (response.status !== 'completed' && countdown > 0) {
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      response = await queryDealAI(token, dealAiAppKey);
+    }
+
+    clearTimeout(timeoutId);
+    setIsLoading(false);
+    setTimer(null);
+
+    if (response.status === 'completed') {
+      response = await endDealAI(token, dealAiAppKey);
+      if (response && response.response && response.response.length > 0) {
+        const newProductDescription = response.response[0].product;
+        setNewDescription(newProductDescription);
+      }
+    }
   };
 
   const onSubmit = useCallback(async () => {
-    if (validateForm()) {
-      const newIssues = [...allIssues];
-      if (isEditing) {
-        // Find the index of the issue that you're editing
-        const editingIssueIndex = newIssues.findIndex(
-          (listIssue) => listIssue.id == issue.id
-        );
-        // Overwrite that issue's title and description with the new ones
-        newIssues[editingIssueIndex] = {
-          ...issue,
-          title,
-          description,
-        };
-      } else {
-        // Add a new issue at the end of the list
-        newIssues.push({
-          id: generateId(),
-          title,
-          description,
-          completed: false,
-        });
-      }
+    await updateProductDescription(data.selected[0].id, newDescription);
+    close();
+  }, [newDescription, data.selected]);
 
-      // Commit changes to the database
-      await updateIssues(data.selected[0].id, newIssues);
-      // Close the modal
-      close();
-    }
-  }, [issue, setIssue, allIssues, title, description]);
-
-  const handleGenerateNewDescription = () => {
-    
-    const generatedDescription = "This is the new generated product description.";
-    updateProductDescription(data.selected[0].id, "This is the new generated product description.")
-    setNewDescription(generatedDescription);
+  const formatCountdown = () => {
+    const minutes = Math.floor(countdown / 60);
+    const seconds = countdown % 60;
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
-
-
-  useEffect(() => {
-    if (issueId) {
-      // If opened from the block extension, you find the issue that's being edited
-      const editingIssue = allIssues.find(({ id }) => `${id}` === issueId);
-      if (editingIssue) {
-        // Set the issue's ID in the state
-        setIssue(editingIssue);
-      }
-    }
-  }, [issueId, allIssues]);
-
-  if (loading) {
-    return <></>;
-  }
 
   return (
     <AdminAction
-      title={isEditing ? "Edit your issue" : "DealAI"}
-      primaryAction={
-        <Button onPress={onSubmit}>{isEditing ? "Save" : "Update"}</Button>
-      }
+      title="Update Product Description"
+      primaryAction={<Button onPress={onSubmit}>Update</Button>}
       secondaryAction={<Button onPress={close}>Cancel</Button>}
     >
-    <TextArea
+      <TextArea
         value={productDescription}
-        label="Product Description"
+        label="Current Product Description"
         readOnly
       />
-      <Button onPress={handleGenerateNewDescription}>Generate New Description</Button>
+
+      
+
+      <Button onPress={handleGenerateNewDescription} disabled={isLoading}>
+        {isLoading ? `Generating... (${formatCountdown()})` : 'Generate New Description'}
+      </Button>
       <Box paddingBlockStart="large">
         <TextArea
           value={newDescription}
@@ -133,24 +128,6 @@ function App() {
           label="New Product Description"
         />
       </Box>
-      {/* <TextField
-        value={title}
-        error={formErrors?.title ? "Please enter a title" : undefined}
-        onChange={(val) => setIssue((prev) => ({ ...prev, title: val }))}
-        label="Title"
-      />
-      <Box paddingBlockStart="large">
-        <TextArea
-          value={description}
-          error={
-            formErrors?.description ? "Please enter a description" : undefined
-          }
-          onChange={(val) =>
-            setIssue((prev) => ({ ...prev, description: val }))
-          }
-          label="Description"
-        />
-      </Box> */}
     </AdminAction>
   );
 }

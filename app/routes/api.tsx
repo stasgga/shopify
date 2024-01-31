@@ -20,7 +20,7 @@ async function fetchMarketingToken(description, dealAiAppKey) {
     if (marketingResponse.ok) {
       const responseData = await marketingResponse.json();
       token = responseData.token;
-      console.log('Token received:', token);
+      
     } else {
       console.error('Failed to get token from marketing API');
     }
@@ -87,7 +87,7 @@ async function endDealAI(token, dealAiAppKey) {
   }
 
   const endResponseData = await endResponse.json();
-  console.log('End response:', endResponseData);
+ 
   return endResponseData; // Return the end response data
 }
 

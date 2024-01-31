@@ -2495,7 +2495,7 @@
           var HostPortal = 4;
           var HostComponent = 5;
           var HostText = 6;
-          var Fragment2 = 7;
+          var Fragment = 7;
           var Mode = 8;
           var ContextConsumer = 9;
           var ContextProvider = 10;
@@ -2635,7 +2635,7 @@
                 return "DehydratedFragment";
               case ForwardRef:
                 return getWrappedName$1(type, type.render, "ForwardRef");
-              case Fragment2:
+              case Fragment:
                 return "Fragment";
               case HostComponent:
                 return type;
@@ -7053,7 +7053,7 @@
               }
             }
             function updateFragment2(returnFiber, current2, fragment, lanes, key) {
-              if (current2 === null || current2.tag !== Fragment2) {
+              if (current2 === null || current2.tag !== Fragment) {
                 var created = createFiberFromFragment(fragment, returnFiber.mode, lanes, key);
                 created.return = returnFiber;
                 return created;
@@ -7456,7 +7456,7 @@
                 if (child.key === key) {
                   var elementType = element.type;
                   if (elementType === REACT_FRAGMENT_TYPE) {
-                    if (child.tag === Fragment2) {
+                    if (child.tag === Fragment) {
                       deleteRemainingChildren(returnFiber, child.sibling);
                       var existing = useFiber(child, element.props.children);
                       existing.return = returnFiber;
@@ -11633,7 +11633,7 @@
                 var _resolvedProps2 = workInProgress2.elementType === type ? _unresolvedProps2 : resolveDefaultProps(type, _unresolvedProps2);
                 return updateForwardRef(current2, workInProgress2, type, _resolvedProps2, renderLanes2);
               }
-              case Fragment2:
+              case Fragment:
                 return updateFragment(current2, workInProgress2, renderLanes2);
               case Mode:
                 return updateMode(current2, workInProgress2, renderLanes2);
@@ -12074,7 +12074,7 @@
               case SimpleMemoComponent:
               case FunctionComponent:
               case ForwardRef:
-              case Fragment2:
+              case Fragment:
               case Mode:
               case Profiler:
               case ContextConsumer:
@@ -16840,7 +16840,7 @@
             return fiber;
           }
           function createFiberFromFragment(elements, mode, lanes, key) {
-            var fiber = createFiber(Fragment2, elements, key, mode);
+            var fiber = createFiber(Fragment, elements, key, mode);
             fiber.lanes = lanes;
             return fiber;
           }
@@ -19467,36 +19467,6 @@
   }
 
   // extensions/admin-action/src/utils.js
-  function updateIssues(id, newIssues) {
-    return __async(this, null, function* () {
-      return yield makeGraphQLQuery(
-        `mutation SetMetafield($namespace: String!, $ownerId: ID!, $key: String!, $type: String!, $value: String!) {
-      metafieldDefinitionCreate(
-        definition: {namespace: $namespace, key: $key, name: "Tracked Issues", ownerType: PRODUCT, type: $type, access: {admin: MERCHANT_READ_WRITE}}
-      ) {
-        createdDefinition {
-          id
-        }
-      }
-      metafieldsSet(metafields: [{ownerId:$ownerId, namespace:$namespace, key:$key, type:$type, value:$value}]) {
-        userErrors {
-          field
-          message
-          code
-        }
-      }
-    }
-    `,
-        {
-          ownerId: id,
-          namespace: "$app:issues",
-          key: "issues",
-          type: "json",
-          value: JSON.stringify(newIssues)
-        }
-      );
-    });
-  }
   function makeGraphQLQuery(query, variables) {
     return __async(this, null, function* () {
       const graphQLQuery = {
@@ -19528,8 +19498,8 @@
   function updateProductDescription(productId, newDescription) {
     return __async(this, null, function* () {
       const mutation = `
-      mutation ProductUpdate($id: ID!, $input: ProductInput!) {
-          productUpdate(id: $id, input: $input) {
+      mutation ProductUpdate($input: ProductInput!) {
+          productUpdate(input: $input) {
               product {
                   id
                   bodyHtml
@@ -19542,22 +19512,93 @@
       }
   `;
       const variables = {
-        id: productId,
         input: {
+          id: productId,
           bodyHtml: newDescription
         }
       };
       try {
         const response = yield makeGraphQLQuery(mutation, variables);
+        console.log(response);
         if (response.data && response.data.productUpdate) {
-          console.log("Product description updated successfully:", response.data.productUpdate);
           return response.data.productUpdate;
         } else if (response.errors) {
-          console.error("Error updating product description:", response.errors);
           throw new Error("Failed to update product description");
         }
       } catch (error) {
-        console.error("Error in updateProductDescription:", error);
+        throw error;
+      }
+    });
+  }
+
+  // app/routes/api.tsx
+  function fetchMarketingToken(description, dealAiAppKey) {
+    return __async(this, null, function* () {
+      let token = "";
+      try {
+        const marketingResponse = yield fetch(
+          "https://api.test.marketing.deal.ai/api/2024-01/product/start",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Deal-AI-API-Key": dealAiAppKey
+            },
+            body: JSON.stringify({
+              businessDescription: description,
+              language: "English",
+              seoTags: [""]
+            })
+          }
+        );
+        if (marketingResponse.ok) {
+          const responseData = yield marketingResponse.json();
+          token = responseData.token;
+        } else {
+          console.error("Failed to get token from marketing API");
+        }
+      } catch (error) {
+        console.error("Error calling marketing API:", error);
+      }
+      return token;
+    });
+  }
+  function endDealAI(token, dealAiAppKey) {
+    return __async(this, null, function* () {
+      const endResponse = yield fetch(
+        `https://api.test.marketing.deal.ai/api/2024-01/product/end/${token}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Deal-AI-API-Key": dealAiAppKey
+          }
+        }
+      );
+      if (!endResponse.ok) {
+        console.error("Failed to fetch end result");
+        throw new Error("Network response was not ok during end.");
+      }
+      const endResponseData = yield endResponse.json();
+      return endResponseData;
+    });
+  }
+  function queryDealAI(token, dealAiAppKey) {
+    return __async(this, null, function* () {
+      try {
+        const queryResponse = yield fetch(
+          `https://api.test.marketing.deal.ai/api/2024-01/product/query/${token}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Deal-AI-API-Key": dealAiAppKey
+            }
+          }
+        );
+        return queryResponse.json();
+      } catch (error) {
+        console.error("Error:", error);
         throw error;
       }
     });
@@ -19568,96 +19609,94 @@
   var TARGET = "admin.product-details.action.render";
   var ActionExtension_default = reactExtension(TARGET, () => /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(App, {}));
   function App() {
-    var _a, _b;
-    const { close, data, intents } = useApi(TARGET);
-    const issueId = (intents == null ? void 0 : intents.launchUrl) ? (_b = (_a = new URL(intents == null ? void 0 : intents.launchUrl)) == null ? void 0 : _a.searchParams) == null ? void 0 : _b.get("issueId") : null;
-    const [loading, setLoading] = (0, import_react12.useState)(issueId ? true : false);
-    const [issue, setIssue] = (0, import_react12.useState)({ title: "", description: "" });
-    const [allIssues, setAllIssues] = (0, import_react12.useState)([]);
-    const [formErrors, setFormErrors] = (0, import_react12.useState)(null);
-    const { title, description, id } = issue;
-    const isEditing = id !== void 0;
+    const { close, data } = useApi(TARGET);
     const [productDescription, setProductDescription] = (0, import_react12.useState)("");
     const [newDescription, setNewDescription] = (0, import_react12.useState)("");
+    const [isLoading, setIsLoading] = (0, import_react12.useState)(false);
+    const [timer, setTimer] = (0, import_react12.useState)(null);
+    const [countdown, setCountdown] = (0, import_react12.useState)(180);
     (0, import_react12.useEffect)(() => {
       (function fetchProductDetails() {
         return __async(this, null, function* () {
+          var _a;
           const productDetails = yield getProductDetails(data.selected[0].id);
-          if (productDetails && productDetails.data && productDetails.data.product) {
-            console.log(`product des=${productDetails.data.product.descriptionHtml}`);
+          if ((_a = productDetails == null ? void 0 : productDetails.data) == null ? void 0 : _a.product) {
             setProductDescription(productDetails.data.product.descriptionHtml);
           }
         });
       })();
-    }, []);
-    const generateId = () => {
-      if (!allIssues.length) {
-        return 0;
-      }
-      return allIssues[allIssues.length - 1].id + 1;
-    };
-    const validateForm = () => {
-      setFormErrors({
-        title: !Boolean(title),
-        description: !Boolean(description)
-      });
-      return Boolean(title) && Boolean(description);
-    };
-    const onSubmit = (0, import_react12.useCallback)(() => __async(this, null, function* () {
-      if (validateForm()) {
-        const newIssues = [...allIssues];
-        if (isEditing) {
-          const editingIssueIndex = newIssues.findIndex(
-            (listIssue) => listIssue.id == issue.id
-          );
-          newIssues[editingIssueIndex] = __spreadProps(__spreadValues({}, issue), {
-            title,
-            description
-          });
-        } else {
-          newIssues.push({
-            id: generateId(),
-            title,
-            description,
-            completed: false
-          });
-        }
-        yield updateIssues(data.selected[0].id, newIssues);
-        close();
-      }
-    }), [issue, setIssue, allIssues, title, description]);
-    const handleGenerateNewDescription = () => {
-      const generatedDescription = "This is the new generated product description.";
-      updateProductDescription(data.selected[0].id, "This is the new generated product description.");
-      setNewDescription(generatedDescription);
-    };
+    }, [data.selected]);
     (0, import_react12.useEffect)(() => {
-      if (issueId) {
-        const editingIssue = allIssues.find(({ id: id2 }) => `${id2}` === issueId);
-        if (editingIssue) {
-          setIssue(editingIssue);
+      let interval;
+      if (isLoading && countdown > 0) {
+        interval = setInterval(() => {
+          setCountdown((prevCountdown) => prevCountdown - 1);
+        }, 1e3);
+      } else {
+        clearInterval(interval);
+      }
+      return () => clearInterval(interval);
+    }, [isLoading, countdown]);
+    fetchApiKey = () => __async(this, null, function* () {
+      const res = yield fetch(`api/dealaikey`);
+      if (!res.ok) {
+        console.error("Failed to fetch API key", res.statusText);
+        throw new Error("Failed to fetch API key");
+      }
+      const data2 = yield res.json();
+      return data2.dealAiAppKey;
+    });
+    const handleGenerateNewDescription = () => __async(this, null, function* () {
+      setIsLoading(true);
+      setCountdown(180);
+      const currentDescription = productDescription;
+      const dealAiAppKey = yield fetchApiKey();
+      const token = yield fetchMarketingToken(currentDescription, dealAiAppKey);
+      let timeoutId = setTimeout(() => {
+        setIsLoading(false);
+        setTimer(null);
+      }, 18e4);
+      let response = yield queryDealAI(token, dealAiAppKey);
+      while (response.status !== "completed" && countdown > 0) {
+        yield new Promise((resolve) => setTimeout(resolve, 5e3));
+        response = yield queryDealAI(token, dealAiAppKey);
+      }
+      clearTimeout(timeoutId);
+      setIsLoading(false);
+      setTimer(null);
+      if (response.status === "completed") {
+        response = yield endDealAI(token, dealAiAppKey);
+        if (response && response.response && response.response.length > 0) {
+          const newProductDescription = response.response[0].product;
+          setNewDescription(newProductDescription);
         }
       }
-    }, [issueId, allIssues]);
-    if (loading) {
-      return /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(import_jsx_runtime4.Fragment, {});
-    }
+    });
+    const onSubmit = (0, import_react12.useCallback)(() => __async(this, null, function* () {
+      yield updateProductDescription(data.selected[0].id, newDescription);
+      close();
+    }), [newDescription, data.selected]);
+    const formatCountdown = () => {
+      const minutes = Math.floor(countdown / 60);
+      const seconds = countdown % 60;
+      return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+    };
     return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
       AdminAction2,
       {
-        title: isEditing ? "Edit your issue" : "DealAI",
-        primaryAction: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Button2, { onPress: onSubmit, children: isEditing ? "Save" : "Update" }),
+        title: "Update Product Description",
+        primaryAction: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Button2, { onPress: onSubmit, children: "Update" }),
         secondaryAction: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Button2, { onPress: close, children: "Cancel" }),
         children: [
           /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
             TextArea2,
             {
               value: productDescription,
-              label: "Product Description",
+              label: "Current Product Description",
               readOnly: true
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Button2, { onPress: handleGenerateNewDescription, children: "Generate New Description" }),
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Button2, { onPress: handleGenerateNewDescription, disabled: isLoading, children: isLoading ? `Generating... (${formatCountdown()})` : "Generate New Description" }),
           /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Box2, { paddingBlockStart: "large", children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
             TextArea2,
             {

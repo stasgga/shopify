@@ -91,7 +91,6 @@ export default function ApiKeyPage() {
 
   return (
     <Page>
-      <div>Title: Deal AI Settings</div>
       <Layout>
         <Layout.Section oneHalf>
           <Card sectioned>
