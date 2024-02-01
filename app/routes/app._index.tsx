@@ -47,13 +47,13 @@ export const action: ActionFunction = async ({ request }) => {
     const reset = formData.get('reset');
 
     if (reset) {
-      // Handle reset
+      
       await prisma.dealAiAppKey.delete({
         where: { shop: shopName },
       });
       return json({ reset: true });
     } else if (apiKey && shopName) {
-      // Handle API key submission
+      
       await prisma.dealAiAppKey.create({
         data: {
           key: apiKey,
@@ -91,7 +91,7 @@ export default function ApiKeyPage() {
 
   return (
     <Page>
-      <Layout>
+       <Layout>
         <Layout.Section oneHalf>
           <Card sectioned>
             <div style={{ marginBottom: '20px' }}>
@@ -140,11 +140,9 @@ export default function ApiKeyPage() {
             <Box paddingBlock="200">
               <BlockStack gap="200">
                 <Text as="p" variant="bodyMd">
-                  
                   Configure additional settings for your Deal AI app here.
                 </Text>
               </BlockStack>
-
             </Box>
 
           </Card>
