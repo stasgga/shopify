@@ -7,8 +7,11 @@ import {
   TextArea,
   Box,
 } from "@shopify/ui-extensions-react/admin";
-import { getProductDetails, updateProductDescription } from "./utils";
 import { fetchMarketingToken, queryDealAI, endDealAI } from "../../../app/routes/api";
+
+import { getProductDetails, updateProductDescription } from "./utils";
+
+
 
 const TARGET = "admin.product-details.action.render";
 
@@ -54,7 +57,8 @@ function App() {
 
     const data = await res.json();
 
-    return data.dealAiAppKey;
+    // Assuming the API now returns an object with dealAiAppKey and shopName
+    return { dealAiAppKey: data.dealAiAppKey, shopName: data.shopName };
   };
 
   const handleGenerateNewDescription = async () => {
@@ -63,21 +67,24 @@ function App() {
 
     const currentDescription = productDescription;
 
-    const dealAiAppKey = await fetchApiKey();
+    const { dealAiAppKey, shopName } = await fetchApiKey();
 
-    const token = await fetchMarketingToken(currentDescription, dealAiAppKey);
+    const productId = data.selected[0].id;
+
+
+    const token = await fetchMarketingToken(currentDescription, dealAiAppKey, productId, shopName);
 
     let timeoutId = setTimeout(() => {
       setIsLoading(false);
       setTimer(null);
     }, 180000); // 3 minutes
 
-    let response = await queryDealAI(token, dealAiAppKey);
+    let response = await queryDealAI(token, dealAiAppKey, productId, shopName);
 
     // Loop until the status is 'completed' or time runs out
     while (response.status !== 'completed' && countdown > 0) {
       await new Promise(resolve => setTimeout(resolve, 5000));
-      response = await queryDealAI(token, dealAiAppKey);
+      response = await queryDealAI(token, dealAiAppKey, productId, shopName);
     }
 
     clearTimeout(timeoutId);
@@ -85,7 +92,7 @@ function App() {
     setTimer(null);
 
     if (response.status === 'completed') {
-      response = await endDealAI(token, dealAiAppKey);
+      response = await endDealAI(token, dealAiAppKey, productId, shopName);
       if (response && response.response && response.response.length > 0) {
         const newProductDescription = response.response[0].product;
         setNewDescription(newProductDescription);
@@ -116,7 +123,7 @@ function App() {
         readOnly
       />
 
-      
+
 
       <Button onPress={handleGenerateNewDescription} disabled={isLoading}>
         {isLoading ? `Generating... (${formatCountdown()})` : 'Generate New Description'}

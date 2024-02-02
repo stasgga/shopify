@@ -1,6 +1,10 @@
-async function fetchMarketingToken(description, dealAiAppKey) {
+
+
+async function fetchMarketingToken(description, dealAiAppKey,productId,shopName) {
+  
   let token = '';
   try {
+   
     const marketingResponse = await fetch(
       'https://api.test.marketing.deal.ai/api/2024-01/product/start',
       {
@@ -20,19 +24,21 @@ async function fetchMarketingToken(description, dealAiAppKey) {
     if (marketingResponse.ok) {
       const responseData = await marketingResponse.json();
       token = responseData.token;
-      
+      console.log('Token received:', token);
     } else {
-      console.error('Failed to get token from marketing API');
+      console.error('Failed to get token from DealAI');
+      throw new Error('Failed to get token from DealAI API');
     }
   } catch (error) {
     console.error('Error calling marketing API:', error);
+    await logError(error, productId, shopName);
   }
   return token;
 }
 
 
-async function updateProductDescription(params) {
 
+async function updateProductDescription(params) { 
   const { shopifyStoreUrl, shopifyAccessToken, productId, productDescription } = params;
 
   const apiUrl = `${shopifyStoreUrl}/admin/api/2023-10/products/${productId}.json`;
@@ -54,21 +60,26 @@ async function updateProductDescription(params) {
     body: JSON.stringify(updatedProductData),
   })
     .then((response) => {
+      
       if (!response.ok) {
-        console.log(response);
+       
         throw new Error('Failed to update product');
       }
       return response.json();
     })
     .then((data) => {
-      console.log('Product updated successfully:', data.product);
+      
+      console.log('Product updated successfully');
     })
     .catch((error) => {
       console.error('Error updating product:', error);
+      logError(error, productId, shopifyStoreUrl); 
     });
 }
 
-async function endDealAI(token, dealAiAppKey) {
+async function endDealAI(token, dealAiAppKey,productId,shopName) {
+  
+  try {   
   // Second API call
   const endResponse = await fetch(
     `https://api.test.marketing.deal.ai/api/2024-01/product/end/${token}`,
@@ -88,12 +99,17 @@ async function endDealAI(token, dealAiAppKey) {
 
   const endResponseData = await endResponse.json();
  
-  return endResponseData; // Return the end response data
+  return endResponseData; 
+} catch (error) {
+ 
+  await logError(error, productId, shopName); 
+  throw error;
+}
 }
 
-
-async function queryDealAI(token, dealAiAppKey) {
+async function queryDealAI(token, dealAiAppKey,productId,shopName) {
   try {
+   
     const queryResponse = await fetch(
       `https://api.test.marketing.deal.ai/api/2024-01/product/query/${token}`,
       {
@@ -109,15 +125,31 @@ async function queryDealAI(token, dealAiAppKey) {
 
    
   } catch (error) {
-    console.error('Error:', error);
+   
+    await logError(error, productId, shopName); 
     throw error;
+
   }
 }
 
 
+async function logError(error, productId, shopName) {
+  try {
+    await prisma.ErrorLog.create({
+      data: {
+        productId: productId,
+        shopName: shopName,
+        stackTrace: error.stack,
+        errorMessage: error.message,
+        timestamp: new Date(), 
+       },
+    });
+    console.error("Logged error to the database:", error.message);
+  } catch (logError) {
+    console.error("Failed to log error to the database:", logError.message);
+  }
+}
+  
 
-
-
-
-export { fetchMarketingToken, updateProductDescription, queryDealAI, endDealAI };
+export { fetchMarketingToken, updateProductDescription, queryDealAI, endDealAI,logError};
 

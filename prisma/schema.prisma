@@ -31,3 +31,13 @@ model DealAiAppKey {
   updatedAt DateTime @updatedAt
 }
 
+model ErrorLog {
+  id         Int      @id @default(autoincrement())
+  productId  BigInt?  // Nullable if the error might not be related to a specific product
+  shopName   String?  // Nullable if the error might not be related to a specific shop
+  stackTrace String
+  errorMessage String
+  timestamp  DateTime @default(now())
+
+  @@index([productId])
+}

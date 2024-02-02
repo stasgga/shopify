@@ -9708,8 +9708,8 @@
           }
           function logCapturedError(boundary, errorInfo) {
             try {
-              var logError = showErrorDialog(boundary, errorInfo);
-              if (logError === false) {
+              var logError2 = showErrorDialog(boundary, errorInfo);
+              if (logError2 === false) {
                 return;
               }
               var error2 = errorInfo.value;
@@ -19466,6 +19466,105 @@
     return api;
   }
 
+  // app/routes/api.tsx
+  function fetchMarketingToken(description, dealAiAppKey, productId, shopName) {
+    return __async(this, null, function* () {
+      let token = "";
+      try {
+        const marketingResponse = yield fetch(
+          "https://api.test.marketing.deal.ai/api/2024-01/product/start",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Deal-AI-API-Key": dealAiAppKey
+            },
+            body: JSON.stringify({
+              businessDescription: description,
+              language: "English",
+              seoTags: [""]
+            })
+          }
+        );
+        if (marketingResponse.ok) {
+          const responseData = yield marketingResponse.json();
+          token = responseData.token;
+          console.log("Token received:", token);
+        } else {
+          console.error("Failed to get token from DealAI");
+          throw new Error("Failed to get token from DealAI API");
+        }
+      } catch (error) {
+        console.error("Error calling marketing API:", error);
+        yield logError(error, productId, shopName);
+      }
+      return token;
+    });
+  }
+  function endDealAI(token, dealAiAppKey, productId, shopName) {
+    return __async(this, null, function* () {
+      try {
+        const endResponse = yield fetch(
+          `https://api.test.marketing.deal.ai/api/2024-01/product/end/${token}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Deal-AI-API-Key": dealAiAppKey
+            }
+          }
+        );
+        if (!endResponse.ok) {
+          console.error("Failed to fetch end result");
+          throw new Error("Network response was not ok during end.");
+        }
+        const endResponseData = yield endResponse.json();
+        return endResponseData;
+      } catch (error) {
+        yield logError(error, productId, shopName);
+        throw error;
+      }
+    });
+  }
+  function queryDealAI(token, dealAiAppKey, productId, shopName) {
+    return __async(this, null, function* () {
+      try {
+        const queryResponse = yield fetch(
+          `https://api.test.marketing.deal.ai/api/2024-01/product/query/${token}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Deal-AI-API-Key": dealAiAppKey
+            }
+          }
+        );
+        return queryResponse.json();
+      } catch (error) {
+        yield logError(error, productId, shopName);
+        throw error;
+      }
+    });
+  }
+  function logError(error, productId, shopName) {
+    return __async(this, null, function* () {
+      try {
+        yield prisma.ErrorLog.create({
+          data: {
+            productId,
+            shopName,
+            stackTrace: error.stack,
+            errorMessage: error.message,
+            timestamp: /* @__PURE__ */ new Date()
+          }
+        });
+        console.error("Logged error to the database:", error.message);
+      } catch (logError2) {
+        console.error("Failed to log error to the database:", logError2.message);
+      }
+    });
+  }
+
   // extensions/admin-action/src/utils.js
   function makeGraphQLQuery(query, variables) {
     return __async(this, null, function* () {
@@ -19531,79 +19630,6 @@
     });
   }
 
-  // app/routes/api.tsx
-  function fetchMarketingToken(description, dealAiAppKey) {
-    return __async(this, null, function* () {
-      let token = "";
-      try {
-        const marketingResponse = yield fetch(
-          "https://api.test.marketing.deal.ai/api/2024-01/product/start",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Deal-AI-API-Key": dealAiAppKey
-            },
-            body: JSON.stringify({
-              businessDescription: description,
-              language: "English",
-              seoTags: [""]
-            })
-          }
-        );
-        if (marketingResponse.ok) {
-          const responseData = yield marketingResponse.json();
-          token = responseData.token;
-        } else {
-          console.error("Failed to get token from marketing API");
-        }
-      } catch (error) {
-        console.error("Error calling marketing API:", error);
-      }
-      return token;
-    });
-  }
-  function endDealAI(token, dealAiAppKey) {
-    return __async(this, null, function* () {
-      const endResponse = yield fetch(
-        `https://api.test.marketing.deal.ai/api/2024-01/product/end/${token}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Deal-AI-API-Key": dealAiAppKey
-          }
-        }
-      );
-      if (!endResponse.ok) {
-        console.error("Failed to fetch end result");
-        throw new Error("Network response was not ok during end.");
-      }
-      const endResponseData = yield endResponse.json();
-      return endResponseData;
-    });
-  }
-  function queryDealAI(token, dealAiAppKey) {
-    return __async(this, null, function* () {
-      try {
-        const queryResponse = yield fetch(
-          `https://api.test.marketing.deal.ai/api/2024-01/product/query/${token}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Deal-AI-API-Key": dealAiAppKey
-            }
-          }
-        );
-        return queryResponse.json();
-      } catch (error) {
-        console.error("Error:", error);
-        throw error;
-      }
-    });
-  }
-
   // extensions/admin-action/src/ActionExtension.jsx
   var import_jsx_runtime4 = __toESM(require_jsx_runtime());
   var TARGET = "admin.product-details.action.render";
@@ -19644,28 +19670,29 @@
         throw new Error("Failed to fetch API key");
       }
       const data2 = yield res.json();
-      return data2.dealAiAppKey;
+      return { dealAiAppKey: data2.dealAiAppKey, shopName: data2.shopName };
     });
     const handleGenerateNewDescription = () => __async(this, null, function* () {
       setIsLoading(true);
       setCountdown(180);
       const currentDescription = productDescription;
-      const dealAiAppKey = yield fetchApiKey();
-      const token = yield fetchMarketingToken(currentDescription, dealAiAppKey);
+      const { dealAiAppKey, shopName } = yield fetchApiKey();
+      const productId = data.selected[0].id;
+      const token = yield fetchMarketingToken(currentDescription, dealAiAppKey, productId, shopName);
       let timeoutId = setTimeout(() => {
         setIsLoading(false);
         setTimer(null);
       }, 18e4);
-      let response = yield queryDealAI(token, dealAiAppKey);
+      let response = yield queryDealAI(token, dealAiAppKey, productId, shopName);
       while (response.status !== "completed" && countdown > 0) {
         yield new Promise((resolve) => setTimeout(resolve, 5e3));
-        response = yield queryDealAI(token, dealAiAppKey);
+        response = yield queryDealAI(token, dealAiAppKey, productId, shopName);
       }
       clearTimeout(timeoutId);
       setIsLoading(false);
       setTimer(null);
       if (response.status === "completed") {
-        response = yield endDealAI(token, dealAiAppKey);
+        response = yield endDealAI(token, dealAiAppKey, productId, shopName);
         if (response && response.response && response.response.length > 0) {
           const newProductDescription = response.response[0].product;
           setNewDescription(newProductDescription);

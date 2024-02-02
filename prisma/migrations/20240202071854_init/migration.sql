@@ -23,8 +23,23 @@ CREATE TABLE "DealAiAppKey" (
     CONSTRAINT "DealAiAppKey_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "ErrorLog" (
+    "id" SERIAL NOT NULL,
+    "productId" BIGINT,
+    "shopName" TEXT,
+    "stackTrace" TEXT NOT NULL,
+    "errorMessage" TEXT NOT NULL,
+    "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ErrorLog_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "DealAiAppKey_shop_key" ON "DealAiAppKey"("shop");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "DealAiAppKey_key_key" ON "DealAiAppKey"("key");
+
+-- CreateIndex
+CREATE INDEX "ErrorLog_productId_idx" ON "ErrorLog"("productId");
