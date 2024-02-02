@@ -7,10 +7,9 @@ import {
   TextArea,
   Box,
 } from "@shopify/ui-extensions-react/admin";
+
 import { fetchMarketingToken, queryDealAI, endDealAI } from "../../../app/routes/api";
-
 import { getProductDetails, updateProductDescription } from "./utils";
-
 
 
 const TARGET = "admin.product-details.action.render";

@@ -2,7 +2,7 @@
 
 name = "deal-ai"
 client_id = "52c88f789e52c89b2061877c6eab2057"
-application_url = "https://where-jumping-anthropology-issn.trycloudflare.com"
+application_url = "https://enabled-files-reporting-soil.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://where-jumping-anthropology-issn.trycloudflare.com/auth/callback",
-  "https://where-jumping-anthropology-issn.trycloudflare.com/auth/shopify/callback",
-  "https://where-jumping-anthropology-issn.trycloudflare.com/api/auth/callback"
+  "https://enabled-files-reporting-soil.trycloudflare.com/auth/callback",
+  "https://enabled-files-reporting-soil.trycloudflare.com/auth/shopify/callback",
+  "https://enabled-files-reporting-soil.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

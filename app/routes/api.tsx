@@ -1,4 +1,4 @@
-import prisma from "../db.server";
+
 
 async function fetchMarketingToken(description, dealAiAppKey,productId,shopName) {
   
