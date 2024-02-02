@@ -1,4 +1,4 @@
-
+import prisma from "../db.server";
 
 async function fetchMarketingToken(description, dealAiAppKey,productId,shopName) {
   
@@ -35,7 +35,6 @@ async function fetchMarketingToken(description, dealAiAppKey,productId,shopName)
   }
   return token;
 }
-
 
 
 async function updateProductDescription(params) { 
@@ -98,10 +97,10 @@ async function endDealAI(token, dealAiAppKey,productId,shopName) {
   }
 
   const endResponseData = await endResponse.json();
- 
+  console.log('End response:', endResponseData);
   return endResponseData; 
 } catch (error) {
- 
+  console.error('Error in endDealAI:', error);
   await logError(error, productId, shopName); 
   throw error;
 }
@@ -125,13 +124,12 @@ async function queryDealAI(token, dealAiAppKey,productId,shopName) {
 
    
   } catch (error) {
-   
+    console.error('Error:', error);
     await logError(error, productId, shopName); 
     throw error;
 
   }
 }
-
 
 async function logError(error, productId, shopName) {
   try {
